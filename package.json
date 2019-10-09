@@ -1,11 +1,11 @@
 {
-    "name": "cordova-plugin-toastyplugin",
+    "name": "cordova-plugin-carplay-android-auto",
     "version": "0.0.1",
-    "description": "An Android Cordova plugin that allows users to display simple Toast messages at the bottom of the screen.",
+    "description": "Cordova plugin for Apple Carplay and Android Auto for audio apps.",
     "cordova": {
-      "id": "cordova-plugin-toastyplugin",
+      "id": "cordova-plugin-carplay-android-auto",
       "platforms": [
-        "android"
+        "android", "ios"
       ]
     },
     "repository": {
@@ -26,10 +26,10 @@
         "version": ">=3.0.0"
       }
     ],
-    "author": "Stanley Idesis <stan.idesis@gmail.com>",
+    "author": "Mike Nelson",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/stanidesis/toastyplugin/issues"
+      "url": "https://github.com/mike-nelson/cordova-plugin-carplay-android-auto/issues"
     },
-    "homepage": "https://github.com/stanidesis/toastyplugin/"
+    "homepage": "https://github.com/mike-nelson/cordova-plugin-carplay-android-auto/"
   }

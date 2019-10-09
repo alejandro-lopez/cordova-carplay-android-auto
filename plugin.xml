@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="cordova-plugin-toastyplugin" version="0.0.1">
+        id="cordova-plugin-carplay-android-auto" version="0.0.1">
     <name>ToastyPlugin</name>
 
     <description>An Android Cordova plugin that allows users to display simple Toast messages at the bottom of the screen.</description>
@@ -15,16 +15,10 @@
         <engine name="cordova" version=">=3.0.0"/>
     </engines>
   
-    <js-module src="www/toastyplugin.js" name="toastyPlugin">
-        <clobbers target="window.plugins.toastyPlugin" />
+    <js-module src="www/plugin-carplay-android-auto.js" name="plugin-carplay-android-auto">
+        <clobbers target="window.plugins.carplayAndroidAutoPlugin" />
     </js-module>
     <platform name="android">
-
-        <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="ToastyPlugin">
-                <param name="android-package" value="com.yossicohen.cordova.plugin.mapbox"/>
-            </feature>
-        </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <meta-data
@@ -50,19 +44,21 @@
 
    <platform name="ios">
     <config-file target="config.xml" parent="/*">
-      <feature name="ToastyPlugin">
-        <param name="ios-package" value="ToastyPlugin" />
+      <feature name="CordovaCarplayPlugin">
+        <param name="ios-package" value="CordovaCarplayPlugin" />
       </feature>
     </config-file>
-		<config-file parent="com.apple.developer.carplay-maps" target="*/Entitlements-Debug.plist">
+		<config-file parent="com.apple.developer.playable-content" target="*/Entitlements-Debug.plist">
 		    <true/>
 		</config-file>
-		<config-file parent="com.apple.developer.carplay-maps" target="*/Entitlements-Release.plist">
+		<config-file parent="com.apple.developer.playable-content" target="*/Entitlements-Release.plist">
             <true/>
 		</config-file>
-    <source-file src="src/ios/ToastyPlugin.swift" />
     
-    <header-file src="src/ios/Bridging-Header.h"/>
+    <header-file src="src/ios/CordovaCarplayPlugin.h" />
+    <source-file src="src/ios/CordovaCarplayPlugin.m" />
+    <header-file src="src/ios/AppDelegate+CordovaCarplayPlugin.h" />
+    <source-file src="src/ios/AppDelegate+CordovaCarplayPlugin.m" />
   </platform>
 
 </plugin>
