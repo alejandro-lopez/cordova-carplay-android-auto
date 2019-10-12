@@ -1,6 +1,8 @@
 # Installation
 
+```
 cordova plugin add https://github.com/mike-nelson/cordova-carplay-android-auto.git
+```
 
 # Goal 
 
