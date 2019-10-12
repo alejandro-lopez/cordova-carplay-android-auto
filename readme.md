@@ -35,6 +35,7 @@ window.plugins.carplayAndroidAutoPlugin.registerHandler(function(result){
             var itemID = result.param;
             // do your own playback
          }
+     }
  }
                 
   ```
