@@ -5,7 +5,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
 
-@interface CordovaCarplayPlugin : CDVPlugin
+@interface CordovaCarplayPlugin : CDVPlugin <MPPlayableContentDataSource, MPPlayableContentDelegate>
 + (CordovaCarplayPlugin *) carplayPlugin;
 
 - (void)registerHandler:(CDVInvokedUrlCommand*)command;

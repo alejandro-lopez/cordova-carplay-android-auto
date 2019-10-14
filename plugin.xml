@@ -7,9 +7,9 @@
     <description>An Android Cordova plugin that allows users to display simple Toast messages at the bottom of the screen.</description>
     <license>MIT</license>
 
-    <keywords>cordova,android,toast,message,alert</keywords>
-    <repo>https://github.com/yoyo770/carplay-audroidauto.git</repo>
-    <issue>https://github.com/stanidesis/toastyplugin/issues</issue>
+    <keywords>cordova,android auto,carplay,audio</keywords>
+    <repo>https://github.com/mike-nelson/carplay-audroidauto.git</repo>
+    <issue>https://github.com/mike-nelson/carplay-audroidauto/issues</issue>
   
     <engines>
         <engine name="cordova" version=">=3.0.0"/>
@@ -43,13 +43,16 @@
     </platform>
 
    <platform name="ios">
-    <config-file target="config.xml" parent="/*">
-      <feature name="CordovaCarplayPlugin">
-        <param name="ios-package" value="CordovaCarplayPlugin" />
-      </feature>
-    </config-file>
-		<config-file parent="com.apple.developer.playable-content" target="*/Entitlements-Debug.plist">
+        <config-file target="config.xml" parent="/*">
+        <feature name="CordovaCarplayPlugin">
+            <param name="ios-package" value="CordovaCarplayPlugin" />
+        </feature>
+        </config-file>
+		<config-file parent="com.apple.developer.playable-content" target="*/Resources/*.entitlements">
 		    <true/>
+		</config-file>
+		<config-file parent="com.apple.developer.playable-content" target="*/Entitlements-Release.plist">
+            <true/>
 		</config-file>
 		<config-file parent="com.apple.developer.playable-content" target="*/Entitlements-Release.plist">
             <true/>

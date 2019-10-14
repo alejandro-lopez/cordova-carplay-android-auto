@@ -6,9 +6,10 @@
 #import <objc/runtime.h>
 #import <MediaPlayer/MediaPlayer.h>
 
+// https://developer.apple.com/documentation/mediaplayer/MPPlayableContentManager?language=objc
 MPPlayableContentManager* playableContentManager;
 
-@interface AppDelegate () <MPPlayableContentDelegate, MPPlayableContentDataSource>
+@interface AppDelegate () 
 - (NSInteger)numberOfChildItemsAtIndexPath:(NSIndexPath *)indexPath;
 @end
 
@@ -46,9 +47,9 @@ MPPlayableContentManager* playableContentManager;
     
     @try{
 
-        MPPlayableContentManager *contentManager = [MPPlayableContentManager sharedContentManager];
-        contentManager.dataSource = self;
-        contentManager.delegate = self;
+   //     MPPlayableContentManager *contentManager = [MPPlayableContentManager sharedContentManager];
+  //      contentManager.dataSource = self;
+   //     contentManager.delegate = self;
       
         self.applicationInBackground = @(YES);
         
@@ -98,45 +99,6 @@ MPPlayableContentManager* playableContentManager;
 }
 
 
-- (NSInteger)numberOfChildItemsAtIndexPath:(NSIndexPath *)indexPath{
-    NSLog(@"numberOfChildItemsAtIndexPath");
-    int count = [CordovaCarplayPlugin.carplayPlugin requestItemCount];
-    return count;
-}
 
-- (nullable MPContentItem *)contentItemAtIndexPath:(nonnull NSIndexPath *)indexPath {
-   NSLog(@"contentItemAtIndexPath");
-    
-   // MPContentItem* item = [[MPContentItem alloc] initWithIdentifier:@"Email 1"];
-   // item.title = @"Subject: my email test";
-   // item.subtitle = @"From: Mike Nelson";
-   // item.playable = YES;
-    
-    int index = (int)[indexPath indexAtPosition:0];
-    MPContentItem* item = [CordovaCarplayPlugin.carplayPlugin requestItemMetaDataByIndex:index];
-    
-    //streamingContent
-    //container
-    return item;
-}
-
-- (void)playableContentManager:(MPPlayableContentManager *)contentManager
-initiatePlaybackOfContentItemAtIndexPath:(NSIndexPath *)indexPath
-             completionHandler:(void (^)(NSError *))completionHandler{
-    NSLog(@"contentItemAtIndexPath");
-    
-    int index = (int)[indexPath indexAtPosition:0];
-    [CordovaCarplayPlugin.carplayPlugin handlePlayback:index completionHandler:completionHandler];
-    
-    //completionHandler(nil);
-}
-
-- (void)beginLoadingChildItemsAtIndexPath:(NSIndexPath *)indexPath 
-                        completionHandler:(void (^)(NSError *))completionHandler{
-
-    // call out to js to load the stuff, then call the completion handler
-    
-    completionHandler(nil);
-}
 
 @end
