@@ -45,16 +45,18 @@ MPPlayableContentManager* playableContentManager;
 - (BOOL)application:(UIApplication *)application swizzledDidFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [self application:application swizzledDidFinishLaunchingWithOptions:launchOptions];
     
-    @try{
+ //   @try{
 
    //     MPPlayableContentManager *contentManager = [MPPlayableContentManager sharedContentManager];
   //      contentManager.dataSource = self;
    //     contentManager.delegate = self;
       
+    //    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+        
         self.applicationInBackground = @(YES);
         
-    }@catch (NSException *exception) {
-    }
+//    }@catch (NSException *exception) {
+  //  }
 
     return YES;
 }
