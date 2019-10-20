@@ -13,10 +13,11 @@
       "url": "git+https://github.com/yoyo770/cordova-carplay-android-auto.git"
     },
     "keywords": [
-      "Toast",
-      "Notification",
-      "Message",
-      "Alert",
+      "CarPlay",
+      "Car",
+      "Vehicle",
+      "Android Auto",
+      "Automotive",
       "ecosystem:cordova",
       "cordova-android"
     ],

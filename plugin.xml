@@ -2,7 +2,7 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="cordova-plugin-carplay-android-auto" version="0.0.1">
-    <name>ToastyPlugin</name>
+    <name>AndroidAutoPlugin</name>
 
     <description>An Android Cordova plugin that allows users to display simple Toast messages at the bottom of the screen.</description>
     <license>MIT</license>
@@ -26,7 +26,7 @@
                 android:resource="@xml/automotive_app_desc" />
 
             <service
-            android:name="com.stanleyidesis.MyMusicService"
+            android:name="nz.co.beweb.speakingemail.MyMusicService"
             android:exported="true">
                 <intent-filter>
                     <action android:name="android.media.browse.MediaBrowserService" />
@@ -35,8 +35,8 @@
         </config-file> 
 
 
-        <source-file src="src/android/MyMusicService.java" target-dir="src/com/stanleyidesis/" />
-        <source-file src="src/android/ToastyPlugin.java" target-dir="src/com/stanleyidesis/cordova/plugin" />
+        <source-file src="src/android/MyMusicService.java" target-dir="src/nz/co/beweb/" />
+        <source-file src="src/android/AndroidAutoPlugin.java" target-dir="src/nz/co/beweb" />
         <resource-file src="src/android/automotive_app_desc.xml" target="res/xml/automotive_app_desc.xml" />
 
         <framework src="src/android/mapbox.gradle" custom="true" type="gradleReference"/>

@@ -1,4 +1,4 @@
-package com.stanleyidesis;
+package nz.co.beweb.speakingemail;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -62,6 +62,28 @@ import java.util.List;
  * </ul>
  */
 public class MyMusicService extends MediaBrowserServiceCompat {
+    /** Declares that ContentStyle is supported */
+    public static final String CONTENT_STYLE_SUPPORTED = "android.media.browse.CONTENT_STYLE_SUPPORTED";
+
+    /**
+    * Bundle extra indicating the presentation hint for playable media items.
+    */
+    public static final String CONTENT_STYLE_PLAYABLE_HINT = "android.media.browse.CONTENT_STYLE_PLAYABLE_HINT";
+
+    /**
+    * Bundle extra indicating the presentation hint for browsable media items.
+    */
+    public static final String CONTENT_STYLE_BROWSABLE_HINT = "android.media.browse.CONTENT_STYLE_BROWSABLE_HINT";
+
+    /**
+    * Specifies the corresponding items should be presented as lists.
+    */
+    public static final int CONTENT_STYLE_LIST_ITEM_HINT_VALUE = 1;
+
+    /**
+    * Specifies that the corresponding items should be presented as grids.
+    */
+    public static final int CONTENT_STYLE_GRID_ITEM_HINT_VALUE = 2;
 
     private MediaSessionCompat mSession;
 
@@ -91,7 +113,38 @@ public class MyMusicService extends MediaBrowserServiceCompat {
     @Override
     public void onLoadChildren(@NonNull final String parentMediaId,
                                @NonNull final Result<List<MediaItem>> result) {
+
+        List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
+
+        // Check if this is the root menu:
+        if (MY_MEDIA_ROOT_ID.equals(parentMediaId)) {
+
+            // build the MediaItem objects for the top level,
+            // and put them in the mediaItems list
+        } else {
+
+            // examine the passed parentMediaId to see which submenu we're at,
+            // and put the children of that menu in the mediaItems list
+        }
+
+
+        //stateBuilder.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
+        //    "Done", "Done", startRadioFromMediaIcon).setExtras(customActionExtras).build());
+
+    
         result.sendResult(new ArrayList<MediaItem>());
+    }
+
+    private MediaBrowser.MediaItem createBrowsableMediaItem(String mediaId, String folderName, Uri iconUri) {
+        MediaDescription.Builder mediaDescriptionBuilder = new MediaDescription.Builder();
+        mediaDescriptionBuilder.setMediaId(mediaId);
+        mediaDescriptionBuilder.setTitle(folderName);
+        mediaDescriptionBuilder.setIconUri(iconUri);
+        Bundle extras = new Bundle();
+        extras.putInt(CONTENT_STYLE_BROWSABLE_HINT, CONTENT_STYLE_LIST_ITEM_HINT_VALUE);
+        extras.putInt(CONTENT_STYLE_PLAYABLE_HINT, CONTENT_STYLE_GRID_ITEM_HINT_VALUE);
+        mediaDescriptionBuilder.setExtras(extras);
+        return new MediaBrowser.MediaItem(mediaDescriptionBuilder.build(), MediaBrowser.MediaItem.FLAG_BROWSABLE);
     }
 
     private final class MediaSessionCallback extends MediaSessionCompat.Callback {
