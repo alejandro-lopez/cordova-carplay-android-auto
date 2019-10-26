@@ -51,7 +51,7 @@
 		<config-file parent="com.apple.developer.playable-content" target="*/Resources/*.entitlements">
 		    <true/>
 		</config-file>
-		<config-file parent="com.apple.developer.playable-content" target="*/Entitlements-Release.plist">
+		<config-file parent="com.apple.developer.playable-content" target="*/Entitlements-Debug.plist">
             <true/>
 		</config-file>
 		<config-file parent="com.apple.developer.playable-content" target="*/Entitlements-Release.plist">

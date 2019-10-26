@@ -55,36 +55,41 @@ static NSMutableDictionary *completionHandlers;
         NSDictionary *arrayResult = [allKeys objectAtIndex:i];
         NSLog(@"title=%@",[arrayResult objectForKey:@"title"]);
         NSLog(@"subtitle=%@",[arrayResult objectForKey:@"subtitle"]);
-        
-        MPContentItem* item = [[MPContentItem alloc] initWithIdentifier:[arrayResult objectForKey:@"id"]];
-        item.title = [arrayResult objectForKey:@"title"];
-        item.subtitle = [arrayResult objectForKey:@"subtitle"];
-//        NSString* imageUrl = [arrayResult objectForKey:@"artworkUrl"];
-//        if ([imageUrl length] > 0){
-//            UIImage *artworkImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:imageUrl]];
-//            if(artworkImage) {
-//                MPMediaItemArtwork *albumArt = [[MPMediaItemArtwork alloc] initWithImage: artworkImage];
-//                item.artwork = albumArt;
-//            }
-//        }
-        BOOL isContainer = [[arrayResult valueForKey:@"isContainer"] boolValue];
-        BOOL isPlayable = [[arrayResult valueForKey:@"isPlayable"] boolValue];
-        item.container = isContainer;
-        item.playable = isPlayable;
-        //item.playable = YES;
-       // item.streamingContent = YES;
-        //mediaItems[i] = item;
         NSString* itemKey = [arrayResult objectForKey:@"itemKey"];
-        if ([mediaItems valueForKey:itemKey]==nil){
-            // only add item if doesn't already exist - this is an optimisation
+        // itemKey is the index position eg "0:1"
+        BOOL isRemove = [[arrayResult valueForKey:@"isRemove"] boolValue];
+        
+        if (isRemove){
+            [mediaItems removeObjectForKey:itemKey];
+        }else{
+            MPContentItem* item = [[MPContentItem alloc] initWithIdentifier:[arrayResult objectForKey:@"id"]];
+            item.title = [arrayResult objectForKey:@"title"];
+            item.subtitle = [arrayResult objectForKey:@"subtitle"];
+    //        NSString* imageUrl = [arrayResult objectForKey:@"artworkUrl"];
+    //        if ([imageUrl length] > 0){
+    //            UIImage *artworkImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:imageUrl]];
+    //            if(artworkImage) {
+    //                MPMediaItemArtwork *albumArt = [[MPMediaItemArtwork alloc] initWithImage: artworkImage];
+    //                item.artwork = albumArt;
+    //            }
+    //        }
+            BOOL isContainer = [[arrayResult valueForKey:@"isContainer"] boolValue];
+            BOOL isPlayable = [[arrayResult valueForKey:@"isPlayable"] boolValue];
+            item.container = isContainer;
+            item.playable = isPlayable;
+            //item.playable = YES;
+           // item.streamingContent = YES;
+            //mediaItems[i] = item;
+            
             // every item added should have a unique key anyway
             [mediaItems setValue:item forKey:itemKey];
         }
+            
     }
     [MPPlayableContentManager.sharedContentManager endUpdates];
     
     // refresh
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [MPPlayableContentManager.sharedContentManager reloadData];
     });
     //[[MPPlayableContentManager sharedContentManager]reloadData];
@@ -99,80 +104,80 @@ static NSMutableDictionary *completionHandlers;
     
     // register handlers for now playing buttons
     // Get the shared command center.
-    MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-
-    // Add a handler for the play command.
-    [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        if (YES) {
-            [self invokeCallback:@"playCommand" param:@""];
-            return MPRemoteCommandHandlerStatusSuccess;
-        }
-        return MPRemoteCommandHandlerStatusCommandFailed;
-    }];
-    [commandCenter.likeCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"likeCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.dislikeCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"dislikeCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.ratingCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.ratingCommand setEnabled:YES];
-    [commandCenter.dislikeCommand setEnabled:YES];
-    [commandCenter.nextTrackCommand setEnabled:YES];
-    
-    [commandCenter.enableLanguageOptionCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.skipForwardCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.skipBackwardCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.stopCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.pauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.bookmarkCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"bookmarkCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.nextTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"nextTrackCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.previousTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"previousTrackCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.togglePlayPauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"togglePlayPauseCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.changeRepeatModeCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [commandCenter.changeShuffleModeCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self invokeCallback:@"ratingCommand" param:@""];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
+//    MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+//
+//    // Add a handler for the play command.
+//    [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        if (YES) {
+//            [self invokeCallback:@"playCommand" param:@""];
+//            return MPRemoteCommandHandlerStatusSuccess;
+//        }
+//        return MPRemoteCommandHandlerStatusCommandFailed;
+//    }];
+//    [commandCenter.likeCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"likeCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.dislikeCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"dislikeCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.ratingCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.ratingCommand setEnabled:YES];
+//    [commandCenter.dislikeCommand setEnabled:YES];
+//    [commandCenter.nextTrackCommand setEnabled:YES];
+//
+//    [commandCenter.enableLanguageOptionCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.skipForwardCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.skipBackwardCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.stopCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.pauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.bookmarkCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"bookmarkCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.nextTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"nextTrackCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.previousTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"previousTrackCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.togglePlayPauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"togglePlayPauseCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.changeRepeatModeCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
+//    [commandCenter.changeShuffleModeCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+//        [self invokeCallback:@"ratingCommand" param:@""];
+//        return MPRemoteCommandHandlerStatusSuccess;
+//    }];
 
 
     [self invokeCallback:@"registerHandlerDone" param:@""];
@@ -203,6 +208,9 @@ static NSMutableDictionary *completionHandlers;
     //To clear the now playing info center dictionary, set it to nil.
     [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
    // MPNowPlayingInfoMediaTypeNone
+  
+    // also update content manager to hide playing icon
+    MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ ];
     
     // not needed actually
     //if (currentCompletionHandler!=nil){
@@ -222,46 +230,48 @@ static NSMutableDictionary *completionHandlers;
     
     int index = (int)[indexPath indexAtPosition:0];
     NSString* itemKey = [indexPath indexPathString];
-    
-    NSLog(@"contentItemAtIndexPath: %i", index);
-    NSLog(@"IndexPath itemKey: %@", itemKey );
+    NSLog(@"initiatePlaybackOfContentItemAtIndexPath IndexPath itemKey: %@", itemKey );
     
     // if playable then play else do another callback eg expand
     // get the item we picked
     //MPContentItem* item = mediaItems[index];
     MPContentItem* item = [mediaItems objectForKey:itemKey];
-    NSString *info = item.identifier;
+    if (item==nil){
+        NSLog(@"initiatePlaybackOfContentItemAtIndexPath item has been removed: %@", itemKey );
+        
+        // tell carplay we are all good, ready to play
+        completionHandler(nil);
+        
+    }else{
+        NSLog(@"initiatePlaybackOfContentItemAtIndexPath item found: %@", itemKey );
+        NSString *info = item.identifier;
+        
+        // update now playing
+        NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
+        //  MPMediaItemArtwork *albumArt = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:@"series_placeholder"]];
+        //[songInfo setObject:albumArt forKey:MPMediaItemPropertyArtwork];
+        [songInfo setObject:item.title forKey:MPMediaItemPropertyTitle];
+        [songInfo setObject:item.subtitle forKey:MPMediaItemPropertyArtist];
+        [MPNowPlayingInfoCenter.defaultCenter setNowPlayingInfo:songInfo];
+        // also update content manager to show playing icon
+        MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ info ];
     
-    // play
-    [self invokeCallback:@"handlePlayback" param:info];
-    
-    //[MPRemoteCommandCenter sharedCommandCenter]
-    
-    // return;
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-//        [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-    });
-    NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
-    //  MPMediaItemArtwork *albumArt = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:@"series_placeholder"]];
-    //[songInfo setObject:albumArt forKey:MPMediaItemPropertyArtwork];
-    [songInfo setObject:item.title forKey:MPMediaItemPropertyTitle];
-    [songInfo setObject:item.subtitle forKey:MPMediaItemPropertyArtist];
-    [MPNowPlayingInfoCenter.defaultCenter setNowPlayingInfo:songInfo];
-    MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ info ];
-    
-    //      [[UIApplication delegate] fooBar];
-    // Workaround to make the Now Playing working on the simulator:
-//#if TARGET_OS_SIMULATOR
-    dispatch_async(dispatch_get_main_queue(), ^{
-//        [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-        [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+        
+        //      [[UIApplication delegate] fooBar];
+        // Workaround to make the Now Playing working on the simulator:
+    //#if TARGET_OS_SIMULATOR
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+            [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+        });
+    //#endif
+        
+        // tell carplay we are all good, ready to play
+        completionHandler(nil);
 
-    });
-//#endif
-    
-    // tell carplay we are all good, ready to play
-    completionHandler(nil);
+        // play
+        [self invokeCallback:@"handlePlayback" param:info];
+    }
 }
 
 // implementation of MPPlayableContentDataSource or MPPlayableContentDelegate
