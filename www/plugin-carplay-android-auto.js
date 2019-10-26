@@ -14,7 +14,10 @@ CarplayAndroidAutoPlugin.prototype.registerHandler = function(successCallback, e
 
 CarplayAndroidAutoPlugin.prototype.finishedPlaying = function(successCallback, errorCallback) {
   var options = {};
-  cordova.exec(successCallback, errorCallback, 'CordovaCarplayPlugin', 'finishedPlaying', [options]);
+  // a little delay as carplay sometimes show blank now playing otherwise
+  window.setTimeout(function(){
+    cordova.exec(successCallback, errorCallback, 'CordovaCarplayPlugin', 'finishedPlaying', [options]);
+  }, 100);
 }
 
 

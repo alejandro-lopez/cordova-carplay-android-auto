@@ -18,6 +18,7 @@ static void (^currentCompletionHandler)(NSError *);
 //static NSMutableArray *mediaItems;
 static NSMutableDictionary *mediaItems;
 static NSMutableDictionary *completionHandlers;
+static bool isDebug = NO;
 
 + (CordovaCarplayPlugin *) carplayPlugin {
     return carplayPlugin;
@@ -89,7 +90,8 @@ static NSMutableDictionary *completionHandlers;
     [MPPlayableContentManager.sharedContentManager endUpdates];
     
     // refresh
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    //dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.01 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         [MPPlayableContentManager.sharedContentManager reloadData];
     });
     //[[MPPlayableContentManager sharedContentManager]reloadData];
@@ -203,14 +205,19 @@ static NSMutableDictionary *completionHandlers;
 
 - (void)finishedPlaying:(CDVInvokedUrlCommand*)command{
     // call this from js to clear the now playing info and return the user to the carplay item list screen
-    NSLog(@"CordovaCarplayPlugin - finishedPlaying");
     
-    //To clear the now playing info center dictionary, set it to nil.
-    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
-   // MPNowPlayingInfoMediaTypeNone
-  
-    // also update content manager to hide playing icon
-    MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ ];
+    if (MPNowPlayingInfoCenter.defaultCenter.nowPlayingInfo==nil){
+        NSLog(@"CordovaCarplayPlugin - finishedPlaying but was already finished");
+    }else{
+        NSLog(@"CordovaCarplayPlugin - finishedPlaying");
+        
+        //To clear the now playing info center dictionary, set it to nil.
+        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
+       // MPNowPlayingInfoMediaTypeNone
+      
+        // also update content manager to hide playing icon
+        MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ ];
+    }
     
     // not needed actually
     //if (currentCompletionHandler!=nil){
@@ -275,17 +282,14 @@ static NSMutableDictionary *completionHandlers;
 }
 
 // implementation of MPPlayableContentDataSource or MPPlayableContentDelegate
-// not sure what this is for, not currently in use
-// seems to be called by carplay only once after user taps the first media item, happens after the play message
 - (void)beginLoadingChildItemsAtIndexPath:(NSIndexPath *)indexPath
                         completionHandler:(void (^)(NSError *))completionHandler{
     
     int index = (int)[indexPath indexAtPosition:0];
-    NSLog(@"beginLoadingChildItemsAtIndexPath1: %@", [indexPath indexPathString]);
+    if(isDebug) NSLog(@"beginLoadingChildItemsAtIndexPath1: %@", [indexPath indexPathString]);
     
-    // call out to js to load the stuff, then call the completion handler
-    // we need this!!!
-    // this is where we load the emails for the given account, and switch accounts too, since there is nowhere else to do this
+    // not implemented
+    // could all out to js to load the stuff, then call the completion handler, but more flexible if we just reload items when we want
     
     completionHandler(nil);
 }
@@ -340,7 +344,7 @@ static NSMutableDictionary *completionHandlers;
     int index = (int)[indexPath indexAtPosition:0];
     NSString* itemKey = [indexPath indexPathString];
     
-    NSLog(@"contentItemAtIndexPath itemKey: %@", itemKey );
+    if(isDebug) NSLog(@"contentItemAtIndexPath itemKey: %@", itemKey );
     
     // if playable then play else do another callback eg expand
     // get the item we picked
