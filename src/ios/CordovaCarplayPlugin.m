@@ -35,15 +35,14 @@ static bool isDebug = NO;
     contentManager.dataSource = self;
     contentManager.delegate = self;
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+  //  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
         
-    });
-  
+   // });
 }
 
 - (void)setMediaItems:(CDVInvokedUrlCommand*)command{
-    // called by js to set up media items and register callback which will handle all the carplay events
+    // called by js to set up any number of media items
     NSLog(@"CordovaCarplayPlugin - registerMediaItems called");
     NSString* mediaItemsJson = [NSString stringWithFormat:@"%@", [command.arguments objectAtIndex:0]];
     NSData* jsonData = [mediaItemsJson dataUsingEncoding:NSUTF8StringEncoding];
@@ -66,18 +65,22 @@ static bool isDebug = NO;
             MPContentItem* item = [[MPContentItem alloc] initWithIdentifier:[arrayResult objectForKey:@"id"]];
             item.title = [arrayResult objectForKey:@"title"];
             item.subtitle = [arrayResult objectForKey:@"subtitle"];
-    //        NSString* imageUrl = [arrayResult objectForKey:@"artworkUrl"];
-    //        if ([imageUrl length] > 0){
-    //            UIImage *artworkImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:imageUrl]];
-    //            if(artworkImage) {
-    //                MPMediaItemArtwork *albumArt = [[MPMediaItemArtwork alloc] initWithImage: artworkImage];
-    //                item.artwork = albumArt;
-    //            }
-    //        }
+            NSString* artworkUrl = [arrayResult objectForKey:@"artworkUrl"];
+            if ([artworkUrl length] > 0){
+                UIImage *image = nil;
+                NSURL *imageURL = [NSURL URLWithString:artworkUrl];
+                NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+                image = [UIImage imageWithData:imageData];
+                if(image) {
+                    MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
+                    item.artwork = artwork;
+                }
+            }
             BOOL isContainer = [[arrayResult valueForKey:@"isContainer"] boolValue];
             BOOL isPlayable = [[arrayResult valueForKey:@"isPlayable"] boolValue];
             item.container = isContainer;
             item.playable = isPlayable;
+            
             //item.playable = YES;
            // item.streamingContent = YES;
             //mediaItems[i] = item;
@@ -95,6 +98,74 @@ static bool isDebug = NO;
         [MPPlayableContentManager.sharedContentManager reloadData];
     });
     //[[MPPlayableContentManager sharedContentManager]reloadData];
+}
+
+//    // async image loading
+//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+//        UIImage *image = nil;
+//        // check whether cover path is present
+//        if (![cover isEqual: @""]) {
+//            // cover is remote file
+//            if ([cover hasPrefix: @"http://"] || [cover hasPrefix: @"https://"]) {
+//                NSURL *imageURL = [NSURL URLWithString:cover];
+//                NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+//                image = [UIImage imageWithData:imageData];
+//            }
+//            // cover is full path to local file
+//            else if ([cover hasPrefix: @"file://"]) {
+//                NSString *fullPath = [cover stringByReplacingOccurrencesOfString:@"file://" withString:@""];
+//                BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
+//                if (fileExists) {
+//                    image = [[UIImage alloc] initWithContentsOfFile:fullPath];
+//                }
+//            }
+//            // cover is relative path to local file
+//            else {
+//                NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+//                NSString *fullPath = [NSString stringWithFormat:@"%@%@", basePath, cover];
+//                BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
+//                if (fileExists) {
+//                    image = [UIImage imageNamed:fullPath];
+//                }
+//            }
+//        }
+//        else {
+//            // default named "no-image"
+//            image = [UIImage imageNamed:@"no-image"];
+//        }
+//        // check whether image is loaded
+//        CGImageRef cgref = [image CGImage];
+//        CIImage *cim = [image CIImage];
+//        if (cim != nil || cgref != NULL) {
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                if (NSClassFromString(@"MPNowPlayingInfoCenter")) {
+//                    NSLog(@"RemoteControls set dictionary on MPNowPlayingInfoCenter.");
+//                    MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
+//                    MPNowPlayingInfoCenter *center = [MPNowPlayingInfoCenter defaultCenter];
+//                    center.nowPlayingInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+//                                             artist, MPMediaItemPropertyArtist,
+//                                             title, MPMediaItemPropertyTitle,
+//                                             album, MPMediaItemPropertyAlbumTitle,
+//                                             artwork, MPMediaItemPropertyArtwork,
+//                                             duration, MPMediaItemPropertyPlaybackDuration,
+//                                             elapsed, MPNowPlayingInfoPropertyElapsedPlaybackTime,
+//                                             [NSNumber numberWithInt:1], MPNowPlayingInfoPropertyPlaybackRate, nil];
+//                }
+//            });
+//        }
+//    });
+
+    
+    
+- (void)removeMediaItems:(CDVInvokedUrlCommand*)command{
+    // called by js to clear media items starting with a specific indexPath eg "1:0:" will clear all keys like 1:0:?
+    NSLog(@"CordovaCarplayPlugin - removeMediaItems called");
+    NSString* indexPath = [NSString stringWithFormat:@"%@", [command.arguments objectAtIndex:0]];
+    for (NSString *key in [mediaItems allKeys]) {
+        if ([key hasPrefix:indexPath]) {
+            [mediaItems removeObjectForKey:key];
+        }
+    }
 }
 
 - (void)registerHandler:(CDVInvokedUrlCommand*)command{
@@ -385,3 +456,6 @@ static bool isDebug = NO;
 
 // avoid remotecontrolevents
 // https://stackoverflow.com/questions/23848928/uiapplication-beginreceivingremotecontrolevents-causes-music-app-to-take-over-a
+
+// nice article showing how others do it 
+// https://www.cleveroad.com/blog/discover-apple-carplay-apps-list-from-third-party-developers

@@ -10,7 +10,7 @@
 
 - (void)registerHandler:(CDVInvokedUrlCommand*)command;
 - (void)setMediaItems:(CDVInvokedUrlCommand*)command;
-- (void)setSingleMediaItem:(CDVInvokedUrlCommand*)command;
+- (void)removeMediaItems:(CDVInvokedUrlCommand*)command;
 - (void)finishedPlaying:(CDVInvokedUrlCommand*)command;
     
 - (void)handlePlayback:(int)trackIndex completionHandler:(void (^)(NSError *))completionHandler;
