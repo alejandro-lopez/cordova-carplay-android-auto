@@ -274,6 +274,80 @@ static bool isDebug = NO;
     [[MPPlayableContentManager sharedContentManager]reloadData];
 }
 
+- (void)updateNowPlayingMetaData:(CDVInvokedUrlCommand*)command{
+    // call this from js to set the now playing info including the carplay item list screen
+
+    // code modified from RemoteControls plugin
+    // Copyright 2013 François LASSERRE. All rights reserved.
+    // MIT Licensed
+    
+    NSString *artist = [command.arguments objectAtIndex:0];
+    NSString *title = [command.arguments objectAtIndex:1];
+    NSString *album = [command.arguments objectAtIndex:2];
+    NSString *cover = [command.arguments objectAtIndex:3];
+    NSNumber *duration = [command.arguments objectAtIndex:4];
+    NSNumber *elapsed = [command.arguments objectAtIndex:5];
+    NSString *mediaItemID = [command.arguments objectAtIndex:6];
+    
+    // also update content manager to show playing icon
+    MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ mediaItemID ];
+    
+    // async cover loading
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        UIImage *image = nil;
+        // check whether cover path is present
+        if (![cover isEqual: @""]) {
+            // cover is remote file
+            if ([cover hasPrefix: @"http://"] || [cover hasPrefix: @"https://"]) {
+                NSURL *imageURL = [NSURL URLWithString:cover];
+                NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+                image = [UIImage imageWithData:imageData];
+            }
+            // cover is full path to local file
+            else if ([cover hasPrefix: @"file://"]) {
+                NSString *fullPath = [cover stringByReplacingOccurrencesOfString:@"file://" withString:@""];
+                BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
+                if (fileExists) {
+                    image = [[UIImage alloc] initWithContentsOfFile:fullPath];
+                }
+            }
+            // cover is relative path to local file
+            else {
+                NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+                NSString *fullPath = [NSString stringWithFormat:@"%@%@", basePath, cover];
+                BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
+                if (fileExists) {
+                    image = [UIImage imageNamed:fullPath];
+                }
+            }
+        }
+        else {
+            // default named "no-image"
+            image = [UIImage imageNamed:@"no-image"];
+        }
+        // check whether image is loaded
+        CGImageRef cgref = [image CGImage];
+        CIImage *cim = [image CIImage];
+        if (cim != nil || cgref != NULL) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (NSClassFromString(@"MPNowPlayingInfoCenter")) {
+                    NSLog(@"RemoteControls set dictionary on MPNowPlayingInfoCenter.");
+                    MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
+                    MPNowPlayingInfoCenter *center = [MPNowPlayingInfoCenter defaultCenter];
+                    center.nowPlayingInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                             artist, MPMediaItemPropertyArtist,
+                                             title, MPMediaItemPropertyTitle,
+                                             album, MPMediaItemPropertyAlbumTitle,
+                                             artwork, MPMediaItemPropertyArtwork,
+                                             duration, MPMediaItemPropertyPlaybackDuration,
+                                             elapsed, MPNowPlayingInfoPropertyElapsedPlaybackTime,
+                                             [NSNumber numberWithInt:1], MPNowPlayingInfoPropertyPlaybackRate, nil];
+                }
+            });
+        }
+    });
+}
+
 - (void)finishedPlaying:(CDVInvokedUrlCommand*)command{
     // call this from js to clear the now playing info and return the user to the carplay item list screen
     
@@ -284,17 +358,10 @@ static bool isDebug = NO;
         
         //To clear the now playing info center dictionary, set it to nil.
         [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
-       // MPNowPlayingInfoMediaTypeNone
-      
+        
         // also update content manager to hide playing icon
         MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ ];
     }
-    
-    // not needed actually
-    //if (currentCompletionHandler!=nil){
-    //     currentCompletionHandler(nil);
-    //     currentCompletionHandler = nil;
-    // }
 }
 
 // https://forums.developer.apple.com/thread/112101
@@ -457,5 +524,5 @@ static bool isDebug = NO;
 // avoid remotecontrolevents
 // https://stackoverflow.com/questions/23848928/uiapplication-beginreceivingremotecontrolevents-causes-music-app-to-take-over-a
 
-// nice article showing how others do it 
+// nice article showing how others do it
 // https://www.cleveroad.com/blog/discover-apple-carplay-apps-list-from-third-party-developers

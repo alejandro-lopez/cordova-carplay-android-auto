@@ -12,6 +12,7 @@
 - (void)setMediaItems:(CDVInvokedUrlCommand*)command;
 - (void)removeMediaItems:(CDVInvokedUrlCommand*)command;
 - (void)finishedPlaying:(CDVInvokedUrlCommand*)command;
+- (void)updateNowPlayingMetaData:(CDVInvokedUrlCommand*)command;
     
 - (void)handlePlayback:(int)trackIndex completionHandler:(void (^)(NSError *))completionHandler;
 - (int)requestItemCount;
