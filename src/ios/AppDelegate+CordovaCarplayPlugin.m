@@ -63,12 +63,15 @@ MPPlayableContentManager* playableContentManager;
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     self.applicationInBackground = @(NO);
-    NSLog(@"FCM direct channel = true");
+    
+    //endReceivingRemoteControlEvents and resignFirstResponder
+    NSLog(@"carplay plugin applicationDidBecomeActive - not doing anything here");
+    
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     self.applicationInBackground = @(YES);
-    NSLog(@"FCM direct channel = false");
+    NSLog(@"entered background");
 }
 
 

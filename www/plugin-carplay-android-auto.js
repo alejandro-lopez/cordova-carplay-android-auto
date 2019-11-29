@@ -26,20 +26,16 @@ CarplayAndroidAutoPlugin.prototype.registerHandler = function(successCallback, e
  * @param {string} coverImage
  * @param {number} duration
  * @param {number} elapsed
+ * @param {number} queueIndex
+ * @param {number} queueCount
  */
-CarplayAndroidAutoPlugin.prototype.updateNowPlayingMetaData = function(mediaItemID, title, subtitle, album, coverImage, duration, elapsed) {
-  cordova.exec(function(){}, function(){}, 'CordovaCarplayPlugin', 'updateNowPlayingMetaData', [title, subtitle, album, coverImage, duration || 0, elapsed || 0, mediaItemID]);
+CarplayAndroidAutoPlugin.prototype.updateNowPlayingMetaData = function(mediaItemID, title, subtitle, album, coverImage, duration, elapsed, queueIndex, queueCount) {
+  cordova.exec(function(){}, function(){}, 'CordovaCarplayPlugin', 'updateNowPlayingMetaData', [title, subtitle, album, coverImage, duration || 0, elapsed || 0, mediaItemID, queueIndex ||0, queueCount||0]);
 }
 
-// /** hides 'now playing' screen on carplay, keeping the current metadata, allowing it to be shown again with the same metadata */
-// CarplayAndroidAutoPlugin.prototype.hideNowPlayingScreen = function() {
-//   cordova.exec(function(){}, function(){}, 'CordovaCarplayPlugin', 'hideNowPlayingScreen', []);
-// }
-
-// /** shows 'now playing' screen on carplay, restoring the current metadata after it was hidden */
-// CarplayAndroidAutoPlugin.prototype.hideNowPlayingScreen = function() {
-//   cordova.exec(function(){}, function(){}, 'CordovaCarplayPlugin', 'hideNowPlayingScreen', []);
-// }
+CarplayAndroidAutoPlugin.prototype.setCommandEnabled = function(commandName, isEnabled) {
+	cordova.exec(function(){}, function(){}, 'CordovaCarplayPlugin', 'setCommandEnabled', [commandName, isEnabled]);
+}
 
 CarplayAndroidAutoPlugin.prototype.finishedPlaying = function() {
   var options = {};

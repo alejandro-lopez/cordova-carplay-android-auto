@@ -1,5 +1,6 @@
 // copyright 2019 by Mike Nelson, beweb
 // open source by MIT license terms
+// created for Speaking Email Carplay https://speaking.email
 
 #import <Cordova/CDV.h>
 #import <AVFoundation/AVFoundation.h>
@@ -9,6 +10,8 @@
 + (CordovaCarplayPlugin *) carplayPlugin;
 
 - (void)registerHandler:(CDVInvokedUrlCommand*)command;
+
+- (void)setCommandEnabled:(CDVInvokedUrlCommand*)command;
 - (void)setMediaItems:(CDVInvokedUrlCommand*)command;
 - (void)removeMediaItems:(CDVInvokedUrlCommand*)command;
 - (void)finishedPlaying:(CDVInvokedUrlCommand*)command;
