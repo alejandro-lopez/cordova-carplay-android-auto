@@ -18,7 +18,7 @@ static void (^currentCompletionHandler)(NSError *);
 //static NSMutableArray *mediaItems;
 static NSMutableDictionary *mediaItems;
 static NSMutableDictionary *thumbnails;
-static bool isDebug = YES;
+static bool isDebug = NO;
 
 + (CordovaCarplayPlugin *) carplayPlugin {
     return carplayPlugin;
@@ -84,19 +84,9 @@ static bool isDebug = YES;
             MPContentItem* item = [[MPContentItem alloc] initWithIdentifier:mediaItemID];
             item.title = [arrayResult objectForKey:@"title"];
             item.subtitle = [arrayResult objectForKey:@"subtitle"];
-//            NSString* artworkUrl = [arrayResult objectForKey:@"artworkUrl"];
-//            if (!isEmpty(artworkUrl)){
-//                UIImage *image = nil;
-//                NSURL *imageURL = [NSURL URLWithString:artworkUrl];
-//                NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
-//                image = [UIImage imageWithData:imageData];
-//                if(image) {
-//                    MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
-//                    item.artwork = artwork;
-//                }
-//            }
             BOOL isContainer = [[arrayResult valueForKey:@"isContainer"] boolValue];
             BOOL isPlayable = [[arrayResult valueForKey:@"isPlayable"] boolValue];
+            NSString* artworkUrl = [arrayResult objectForKey:@"artworkUrl"];
             item.container = isContainer;
             item.playable = isPlayable;
             
@@ -104,19 +94,154 @@ static bool isDebug = YES;
            // item.streamingContent = YES;
             //mediaItems[i] = item;
             
-            // every item added should have a unique key anyway
-            [mediaItems setValue:item forKey:indexPathKey];
-        }
+            // every item added has a unique key which is its index position eg 0:0:1
+            //@synchronized(mediaItems){
+                [mediaItems setValue:item forKey:indexPathKey];
+            //}
             
+            if (!isEmpty(artworkUrl)){
+                //MPMediaItemArtwork *artwork = [MPMediaItemArtwork alloc];
+                //UIImage *appIcon = [UIImage imageNamed:@"AppIcon40x40"];
+                //MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage: appIcon];
+                //item.artwork = artwork;
+                [self loadArtworkInBackground:artworkUrl contentItem:item];
+              
+//                // load image in background if not already loaded
+//                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+//                    UIImage *image = nil;
+//                    NSURL *imageURL = [NSURL URLWithString:artworkUrl];
+//                    NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+//                    image = [UIImage imageWithData:imageData];
+//                    if(image) {
+//                        MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
+//                        item.artwork = artwork;
+//                    }
+//
+//                    // update the corresponing media item when loading finishes
+//                    //[mediaItems setValue:item forKey:indexPathKey];
+//                });
+            }
+        }
     }
     [MPPlayableContentManager.sharedContentManager endUpdates];
     
     // refresh
     //dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.01 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    dispatch_async(dispatch_get_main_queue(), ^{
+    //dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
         [MPPlayableContentManager.sharedContentManager reloadData];
     });
     //[[MPPlayableContentManager sharedContentManager]reloadData];
+}
+
+- (void)loadArtworkInBackground:(NSString*)artworkUrl contentItem:(MPContentItem*)contentItem{
+    MPMediaItemArtwork* artwork = [thumbnails objectForKey:artworkUrl];
+    if(artwork){
+        // cached image
+        //NSLog(@"mediaItem using cached image %@", artworkUrl);
+        contentItem.artwork = artwork;
+    }else{
+        // perform loading in background either from url or filesystem  -- note saw a firebase crashlytics on next line
+        //dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            MPMediaItemArtwork *artwork = [self loadArtwork:artworkUrl];
+            //dispatch_async(dispatch_get_main_queue(), ^{
+                if (artwork){
+                    contentItem.artwork = artwork;
+                }
+            //});
+        //});
+    }
+}
+
+- (void)loadArtworkInBackground:(NSString*)artworkUrl nowPlayingDictionary:(NSMutableDictionary*)songInfo{
+    MPMediaItemArtwork* artwork = [thumbnails objectForKey:artworkUrl];
+    if(artwork){
+        // cached image
+        [songInfo setObject:artwork forKey:MPMediaItemPropertyArtwork];
+    }else{
+        // perform loading in background either from url or filesystem
+        //dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            MPMediaItemArtwork *artwork = [self loadArtwork:artworkUrl];
+            //dispatch_async(dispatch_get_main_queue(), ^{
+                if (artwork){
+                    // update in media data
+                    [songInfo setObject:artwork forKey:MPMediaItemPropertyArtwork];
+                    // show image now it has loaded
+                    [MPNowPlayingInfoCenter.defaultCenter setNowPlayingInfo:songInfo];
+                }
+            //});
+        //});
+    }
+}
+
+- (MPMediaItemArtwork*)loadArtwork:(NSString*)cover{
+    // load image in background if not already loaded
+    MPMediaItemArtwork* artwork = nil;
+    UIImage *image = nil;
+//    NSURL *imageURL = [NSURL URLWithString:artworkUrl];
+//    NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+//    image = [UIImage imageWithData:imageData];
+//    if(image) {
+//        MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
+//        return artwork;
+//        //item.artwork = artwork;
+//    }
+    
+    // image not already cached
+    if ([cover hasPrefix: @"http://"] || [cover hasPrefix: @"https://"]) {
+        // cover is remote file
+        NSLog(@"carplayplugin loading URL image MPNowPlayingInfoCenter 2a.");
+        NSURL *imageURL = [NSURL URLWithString:cover];
+
+        NSLog(@"carplayplugin loading URL image MPNowPlayingInfoCenter 2b.");
+        NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+
+        NSLog(@"carplayplugin loading URL image MPNowPlayingInfoCenter 2c.");
+        image = [UIImage imageWithData:imageData];
+
+        NSLog(@"carplayplugin loading URL image MPNowPlayingInfoCenter 2d.");
+        
+    }
+    else if ([cover hasPrefix: @"file://"]) {
+        // cover is full path to local file
+        NSString *fullPath = [cover stringByReplacingOccurrencesOfString:@"file://" withString:@""];
+        BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
+        
+        NSLog(@"fullPath %@ 2d.",fullPath);
+        
+        if (fileExists) {
+            NSLog(@"localfile image fileexists %@ 2d.",fullPath);
+            image = [[UIImage alloc] initWithContentsOfFile:fullPath];
+        }
+    }
+    else {
+        // cover is relative path to local file in documents directory
+        NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+        NSString *fullPath = [NSString stringWithFormat:@"%@%@", basePath, cover];
+        BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
+        if (fileExists) {
+            image = [UIImage imageNamed:fullPath];
+        }
+    }
+
+    // if we got an image, turn it into an artwork
+    if (image){
+        // create artwork
+        // check whether image is loaded
+        CGImageRef cgref = [image CGImage];
+        CIImage *cim = [image CIImage];
+        if (cim != nil || cgref != NULL) {
+            artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
+            // cache image
+            @synchronized (thumbnails) {
+                [thumbnails setValue:artwork forKey:cover];
+                // 17 jan 2020 - crash here in firebase crashlytics - 23 jan added back @sync wrapper
+            }
+            
+        }
+    }
+
+    return artwork;
 }
 
 //    // async image loading
@@ -233,10 +358,12 @@ static bool isDebug = YES;
 //        return MPRemoteCommandHandlerStatusSuccess;
 //    }];
     [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        // note: weirdly, the play button sometimes looks like a stop button and returns user to the media list screen
         [self invokeCallback:@"playCommand"];
         return MPRemoteCommandHandlerStatusSuccess;
     }];
     [commandCenter.stopCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        // stop button does not seem to work
         [self invokeCallback:@"stopCommand"];
         return MPRemoteCommandHandlerStatusSuccess;
     }];
@@ -308,7 +435,7 @@ static bool isDebug = YES;
 
 // send a cordova callback / event to javascript land
 - (void)invokeCallback:(NSString*)action indexPathKey:(NSString*)param mediaItemID:(NSString*)mediaItemID{
-    NSLog(@"CordovaCarplayPlugin - invokeCallback - called");
+    //NSLog(@"CordovaCarplayPlugin - invokeCallback - called");
     NSDictionary *message = @{
                               @"action": action,
                               @"indexPathKey": param,
@@ -340,103 +467,128 @@ static bool isDebug = YES;
     NSString *mediaItemID = [command.arguments objectAtIndex:6];
     NSNumber *playlistIndex = [command.arguments objectAtIndex:7];
     NSNumber *playlistCount = [command.arguments objectAtIndex:8];
+    NSNumber *playButtonState = [command.arguments objectAtIndex:9];
     
     // Get the shared command center.
     MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+  
+    #if TARGET_OS_SIMULATOR
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.01 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+            [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+        });
+    #endif
     
     if (!isEmpty(mediaItemID)){
         // also update content manager to show playing icon
         MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ mediaItemID ];
         
         // show all the buttons relevant to media items
+        //playButtonState
+        [commandCenter.togglePlayPauseCommand setEnabled:YES];
         [commandCenter.likeCommand setEnabled:YES];
         [commandCenter.dislikeCommand setEnabled:YES];
         [commandCenter.bookmarkCommand setEnabled:YES];
         [commandCenter.nextTrackCommand setEnabled:YES];
         [commandCenter.previousTrackCommand setEnabled:YES];
         [commandCenter.changeRepeatModeCommand setEnabled:YES];
+        [commandCenter.changeShuffleModeCommand setEnabled:YES];
     }else{
         // hide all the buttons relevant to media items
+        [commandCenter.togglePlayPauseCommand setEnabled:NO];
+        [commandCenter.pauseCommand setEnabled:NO];
+        [commandCenter.stopCommand setEnabled:NO];
+        [commandCenter.playCommand setEnabled:NO];
+        if ([playButtonState intValue]==1){
+            [commandCenter.pauseCommand setEnabled:YES];
+        }else if ([playButtonState intValue]==2){
+            [commandCenter.playCommand setEnabled:YES];
+        }else{
+            // zero = off
+            
+        }
         [commandCenter.likeCommand setEnabled:NO];
         [commandCenter.dislikeCommand setEnabled:NO];
         [commandCenter.bookmarkCommand setEnabled:NO];
         [commandCenter.nextTrackCommand setEnabled:NO];
         [commandCenter.previousTrackCommand setEnabled:NO];
         [commandCenter.changeRepeatModeCommand setEnabled:NO];
+        [commandCenter.changeShuffleModeCommand setEnabled:NO];
     }
     
-    NSLog(@"CordovaCarplayPlugin - updateNowPlayingMetaData to %@, %@", title, subtitle);
+    //NSLog(@"CordovaCarplayPlugin - updateNowPlayingMetaData to %@, %@", title, subtitle);
     
-    // async cover loading
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-    UIImage *image = nil;
-    MPMediaItemArtwork *artwork;
 
-    NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 1.");// check whether cover path is present
-        if (!isEmpty(cover)) {
-            artwork = [thumbnails objectForKey:cover];
-            if(artwork){
-                // cached image
-                NSLog(@"Loading image from cache %@", cover);
-            }else{
-                // image not already cached
-                if ([cover hasPrefix: @"http://"] || [cover hasPrefix: @"https://"]) {
-                // cover is remote file
-//                NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 2a.");
-//                NSURL *imageURL = [NSURL URLWithString:cover];
+    // async cover loading
+//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+//        UIImage *image = nil;
+//        MPMediaItemArtwork *artwork;
 //
-//                NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 2b.");
-//                NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+//        NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 1.");// check whether cover path is present
+//        if (!isEmpty(cover)) {
+//            artwork = [thumbnails objectForKey:cover];
+//            if(artwork){
+//                // cached image
+//                NSLog(@"Loading image from cache %@", cover);
+//            }else{
+//                // image not already cached
+//                if ([cover hasPrefix: @"http://"] || [cover hasPrefix: @"https://"]) {
+//                // cover is remote file
+////                NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 2a.");
+////                NSURL *imageURL = [NSURL URLWithString:cover];
+////
+////                NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 2b.");
+////                NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+////
+////                NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 2c.");
+////                image = [UIImage imageWithData:imageData];
+////
+////                NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 2d.");
 //
-//                NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 2c.");
-//                image = [UIImage imageWithData:imageData];
+//                }
+//                // cover is full path to local file
+//                else if ([cover hasPrefix: @"file://"]) {
+//                    NSString *fullPath = [cover stringByReplacingOccurrencesOfString:@"file://" withString:@""];
+//                    BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
+//                    if (fileExists) {
+//                        image = [[UIImage alloc] initWithContentsOfFile:fullPath];
+//                    }
+//                }
+//                // cover is relative path to local file in documents directory
+//                else {
+//                    NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+//                    NSString *fullPath = [NSString stringWithFormat:@"%@%@", basePath, cover];
+//                    BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
+//                    if (fileExists) {
+//                        image = [UIImage imageNamed:fullPath];
+//                    }
+//                }
+//                if (image){
+//                    // create artwork
+//                    // check whether image is loaded
+//                    CGImageRef cgref = [image CGImage];
+//                    CIImage *cim = [image CIImage];
+//                    if (cim != nil || cgref != NULL) {
+//                        MPMediaItemArtwork* artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
+//                        // cache image
+//                        [thumbnails setValue:artwork forKey:cover];
+//                    }
+//                }
+//            }
 //
-//                NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 2d.");
-                
-                }
-                // cover is full path to local file
-                else if ([cover hasPrefix: @"file://"]) {
-                    NSString *fullPath = [cover stringByReplacingOccurrencesOfString:@"file://" withString:@""];
-                    BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
-                    if (fileExists) {
-                        image = [[UIImage alloc] initWithContentsOfFile:fullPath];
-                    }
-                }
-                // cover is relative path to local file in documents directory
-                else {
-                    NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-                    NSString *fullPath = [NSString stringWithFormat:@"%@%@", basePath, cover];
-                    BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:fullPath];
-                    if (fileExists) {
-                        image = [UIImage imageNamed:fullPath];
-                    }
-                }
-                if (image){
-                    // create artwork
-                    // check whether image is loaded
-                    CGImageRef cgref = [image CGImage];
-                    CIImage *cim = [image CIImage];
-                    if (cim != nil || cgref != NULL) {
-                        MPMediaItemArtwork* artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
-                        // cache image
-                        [thumbnails setValue:artwork forKey:cover];
-                    }
-                }
-            }
-            
-        }
-        else {
-            // default named "no-image"
-            //image = [UIImage imageNamed:@"no-image"];
-        }
-    
-        NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 3.");
-        // check whether image is loaded
- //       CGImageRef cgref = [image CGImage];
- //       CIImage *cim = [image CIImage];
-           dispatch_async(dispatch_get_main_queue(), ^{
+//        }
+//        else {
+//            // default named "no-image"
+//            //image = [UIImage imageNamed:@"no-image"];
+//        }
+//
+//        NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 3.");
+//        // check whether image is loaded
+// //       CGImageRef cgref = [image CGImage];
+// //       CIImage *cim = [image CIImage];
+//           dispatch_async(dispatch_get_main_queue(), ^{
                 if (NSClassFromString(@"MPNowPlayingInfoCenter")) {
-                    NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 4.");
+                    //NSLog(@"carplayplugin set dictionary on MPNowPlayingInfoCenter 4.");
 
                     NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
                     //  MPMediaItemArtwork *albumArt = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:@"series_placeholder"]];
@@ -449,20 +601,28 @@ static bool isDebug = YES;
 //                    MPMediaItemArtwork *artwork;
 //                    if (cim != nil || cgref != NULL) {
 //                        artwork = [[MPMediaItemArtwork alloc] initWithImage: image];
-                    if (artwork){
-                        [songInfo setObject:artwork forKey:MPMediaItemPropertyArtwork];
+//                    if (artwork){
+//                        [songInfo setObject:artwork forKey:MPMediaItemPropertyArtwork];
+//                    }
+                    if (!isEmpty(cover)){
+                        //MPMediaItemArtwork *artwork = [MPMediaItemArtwork alloc];
+                        //UIImage *appIcon = [UIImage imageNamed:@"AppIcon40x40"];
+                        //MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage: appIcon];
+                        //item.artwork = artwork;
+                        [self loadArtworkInBackground:cover nowPlayingDictionary:songInfo];
                     }
                     
                     [songInfo setObject:duration forKey:MPMediaItemPropertyPlaybackDuration];
                     [songInfo setObject:elapsed forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
-                    [songInfo setObject:[NSNumber numberWithInt:1] forKey:MPNowPlayingInfoPropertyPlaybackRate];
+                    if ([playButtonState intValue]==1){
+                        [songInfo setObject:[NSNumber numberWithInt:1] forKey:MPNowPlayingInfoPropertyPlaybackRate];
+                    }
                     [songInfo setObject:[NSNumber numberWithInt:1] forKey:MPNowPlayingInfoPropertyDefaultPlaybackRate];
                     if (playlistCount>0){
                         [songInfo setObject:playlistCount forKey:MPNowPlayingInfoPropertyPlaybackQueueCount];
                         [songInfo setObject:playlistIndex forKey:MPNowPlayingInfoPropertyPlaybackQueueIndex];
                     }
                     [MPNowPlayingInfoCenter.defaultCenter setNowPlayingInfo:songInfo];
-                    
                     
 //                    if (artwork!=nil){
 //                    MPNowPlayingInfoCenter *center = [MPNowPlayingInfoCenter defaultCenter];
@@ -479,8 +639,10 @@ static bool isDebug = YES;
             
                 }
                 
-            });
-    });
+//            });
+//    });
+
+    
 }
 
 - (void)finishedPlaying:(CDVInvokedUrlCommand*)command{
@@ -491,12 +653,13 @@ static bool isDebug = YES;
     }else{
         NSLog(@"CordovaCarplayPlugin - finishedPlaying");
         
-        //To clear the now playing info center dictionary, set it to nil.
-        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
-        
-        // also update content manager to hide playing icon
-        MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ ];
     }
+    
+    //To clear the now playing info center dictionary, set it to nil.
+    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
+    
+    // also update content manager to hide playing icon
+    MPPlayableContentManager.sharedContentManager.nowPlayingIdentifiers = @[ ];
 }
 
 // https://forums.developer.apple.com/thread/112101
@@ -539,12 +702,12 @@ static bool isDebug = YES;
         
         //      [[UIApplication delegate] fooBar];
         // Workaround to make the Now Playing working on the simulator:
-    //#if TARGET_OS_SIMULATOR
- //       dispatch_async(dispatch_get_main_queue(), ^{
-//            [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-//            [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-//        });
-    //#endif
+    #if TARGET_OS_SIMULATOR
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+            [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+        });
+    #endif
         
         // tell carplay we are all good, ready to play
         completionHandler(nil);
@@ -600,13 +763,13 @@ static bool isDebug = YES;
         }
     }
 
-    NSLog(@"numberOfChildItemsAtIndexPath: '%@' is %i", itemKey, count);
+    if(isDebug) NSLog(@"numberOfChildItemsAtIndexPath: '%@' is %i", itemKey, count);
 
     MPPlayableContentManager *contentManager = [MPPlayableContentManager sharedContentManager];
     
-    NSLog(@"limitsEnforced: %i", contentManager.context.contentLimitsEnforced);
-    NSLog(@"limit depth: %li", contentManager.context.enforcedContentTreeDepth);
-    NSLog(@"limit items: %li", contentManager.context.enforcedContentItemsCount);
+    if(isDebug) NSLog(@"limitsEnforced: %i", contentManager.context.contentLimitsEnforced);
+    if(isDebug) NSLog(@"limit depth: %li", contentManager.context.enforcedContentTreeDepth);
+    if(isDebug) NSLog(@"limit items: %li", contentManager.context.enforcedContentItemsCount);
 
     return count;
 }

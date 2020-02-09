@@ -28,11 +28,6 @@ MPPlayableContentManager* playableContentManager;
     return objc_getAssociatedObject(self, kDelegateKey);
 }
 
-+ (void)load {
-    Method original = class_getInstanceMethod(self, @selector(application:didFinishLaunchingWithOptions:));
-    Method swizzled = class_getInstanceMethod(self, @selector(application:swizzledDidFinishLaunchingWithOptions:));
-    method_exchangeImplementations(original, swizzled);
-}
 
 - (void)setApplicationInBackground:(NSNumber *)applicationInBackground {
     objc_setAssociatedObject(self, kApplicationInBackgroundKey, applicationInBackground, OBJC_ASSOCIATION_RETAIN_NONATOMIC);

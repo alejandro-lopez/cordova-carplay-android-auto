@@ -28,9 +28,10 @@ CarplayAndroidAutoPlugin.prototype.registerHandler = function(successCallback, e
  * @param {number} elapsed
  * @param {number} queueIndex
  * @param {number} queueCount
+ * @param {number} playButtonState
  */
-CarplayAndroidAutoPlugin.prototype.updateNowPlayingMetaData = function(mediaItemID, title, subtitle, album, coverImage, duration, elapsed, queueIndex, queueCount) {
-  cordova.exec(function(){}, function(){}, 'CordovaCarplayPlugin', 'updateNowPlayingMetaData', [title, subtitle, album, coverImage, duration || 0, elapsed || 0, mediaItemID, queueIndex ||0, queueCount||0]);
+CarplayAndroidAutoPlugin.prototype.updateNowPlayingMetaData = function(mediaItemID, title, subtitle, album, coverImage, duration, elapsed, queueIndex, queueCount, playButtonState) {
+  cordova.exec(function(){}, function(){}, 'CordovaCarplayPlugin', 'updateNowPlayingMetaData', [title, subtitle, album, coverImage, duration || 0, elapsed || 0, mediaItemID, queueIndex ||0, queueCount||0, playButtonState||0]);
 }
 
 CarplayAndroidAutoPlugin.prototype.setCommandEnabled = function(commandName, isEnabled) {
