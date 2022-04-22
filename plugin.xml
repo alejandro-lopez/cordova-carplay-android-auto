@@ -35,7 +35,7 @@
         </config-file> 
 
 
-        <source-file src="src/android/MyMusicService.java" target-dir="src/nz/co/beweb/" />
+        <!--<source-file src="src/android/MyMusicService.java" target-dir="src/nz/co/beweb/" />-->
         <source-file src="src/android/AndroidAutoPlugin.java" target-dir="src/nz/co/beweb" />
         <resource-file src="src/android/automotive_app_desc.xml" target="res/xml/automotive_app_desc.xml" />
 
