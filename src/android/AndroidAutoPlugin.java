@@ -7,6 +7,7 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import android.widget.Toast;
 
 public class AndroidAutoPlugin extends CordovaPlugin {
   private static final String DURATION_LONG = "long";
