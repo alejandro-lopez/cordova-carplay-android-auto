@@ -25,13 +25,13 @@
                 android:name="com.google.android.gms.car.application"
                 android:resource="@xml/automotive_app_desc" />
 
-            <service
+            <!--<service
             android:name="nz.co.beweb.speakingemail.MyMusicService"
             android:exported="true">
                 <intent-filter>
                     <action android:name="android.media.browse.MediaBrowserService" />
                 </intent-filter>
-            </service>
+            </service>-->
         </config-file> 
 
 
