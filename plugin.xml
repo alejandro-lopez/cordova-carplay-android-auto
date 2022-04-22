@@ -39,7 +39,7 @@
         <source-file src="src/android/AndroidAutoPlugin.java" target-dir="src/nz/co/beweb" />
         <resource-file src="src/android/automotive_app_desc.xml" target="res/xml/automotive_app_desc.xml" />
 
-        <framework src="src/android/mapbox.gradle" custom="true" type="gradleReference"/>
+        <!--<framework src="src/android/mapbox.gradle" custom="true" type="gradleReference"/>-->
     </platform>
 
    <platform name="ios">
